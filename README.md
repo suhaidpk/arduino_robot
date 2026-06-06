@@ -100,32 +100,31 @@ void loop() {
 
 ---
 
-## Bluetooth Apps
+## Controller App
 
-### Joystick Control
-Use any Bluetooth RC car app that sends the following characters:
+A mobile-friendly web app is included for controlling the robot wirelessly.
+Open `app/robot_controller.html` in Chrome or Edge on your phone.
 
-| Button | Character |
-|--------|-----------|
-| Forward | `F` |
-| Backward | `B` |
-| Left | `L` |
-| Right | `R` |
-| Stop | `S` |
+### Joystick mode
+Hold the D-pad buttons to drive. Releases an automatic stop command
+when you lift your finger. Speed can be set to Slow / Medium / Fast.
 
-### Voice Control
-Use a Bluetooth voice app configured with these mappings:
+### Voice mode
+Tap the microphone and speak commands. Requires Chrome/Edge on Android
+for Web Speech API support.
 
-| Voice Command | Character sent |
-|---------------|----------------|
-| "move forward" | `^` |
-| "move back" | `-` |
+| Say | Sends |
+|-----|-------|
+| "move forward" / "go forward" | `^` |
+| "move back" / "reverse" | `-` |
 | "turn left" | `<` |
 | "turn right" | `>` |
-| "stop" | `*` |
+| "stop" / "halt" | `*` |
 
----
-
+### Setup
+1. Pair your HC-05 in your phone's Bluetooth settings first
+2. Open the app, select the device, tap Connect
+3. Switch between Joystick and Voice tabs as needed
 ## How Obstacle Avoidance Works
 
 ```
@@ -168,6 +167,8 @@ arduino_robot/
 │   └── build_steps.md            ← Physical assembly guide
 ├── schematics/
 │   └── wiring_notes.md           ← Connection reference
+├── app/
+│   └── robot_controller.html     ← Mobile Bluetooth controller app
 └── README.md
 ```
 
