@@ -78,7 +78,7 @@ Download the Adafruit AF Motor library (v1) and install it in the Arduino IDE:
 ### 2. Open the Sketch
 
 ```
-src/multifunc_robot/multifunc_robot.ino
+src/robot/robot.ino
 ```
 
 ### 3. Select Operating Mode
@@ -160,7 +160,7 @@ The servo returns to centre (103°) between scans. Turn duration is fixed at 500
 ## Repository Structure
 
 ```
-arduino-multifunc-robot/
+arduino_robot/
 ├── src/
 │   └── robot/
 │       └── robot.ino   ← Main sketch
