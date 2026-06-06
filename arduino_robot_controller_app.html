@@ -1,0 +1,312 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); }
+  .app { min-height: 600px; background: var(--color-background-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; }
+  .header { background: var(--color-background-primary); border-bottom: 0.5px solid var(--color-border-tertiary); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .logo-dot { width: 10px; height: 10px; border-radius: 50%; background: #1D9E75; }
+  .app-title { font-size: 15px; font-weight: 500; color: var(--color-text-primary); }
+  .bt-status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--color-text-secondary); }
+  .bt-dot { width: 8px; height: 8px; border-radius: 50%; background: #888780; transition: background 0.3s; }
+  .bt-dot.connected { background: #1D9E75; box-shadow: 0 0 0 3px rgba(29,158,117,0.15); }
+  .tab-bar { background: var(--color-background-primary); display: flex; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .tab { flex: 1; padding: 11px; text-align: center; font-size: 13px; color: var(--color-text-secondary); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; user-select: none; }
+  .tab.active { color: #0F6E56; border-bottom-color: #1D9E75; font-weight: 500; }
+  .tab-content { display: none; padding: 24px 20px; }
+  .tab-content.active { display: block; }
+
+  .bt-connect-bar { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 12px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+  .bt-connect-bar select { flex: 1; font-size: 13px; background: var(--color-background-primary); color: var(--color-text-primary); border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 6px 10px; }
+  .connect-btn { font-size: 13px; padding: 7px 16px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); cursor: pointer; white-space: nowrap; transition: background 0.15s; }
+  .connect-btn:hover { background: var(--color-background-secondary); }
+  .connect-btn.connected { border-color: #0F6E56; color: #0F6E56; }
+
+  .speed-row { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+  .speed-row label { font-size: 13px; color: var(--color-text-secondary); white-space: nowrap; }
+  .speed-row input[type=range] { flex: 1; }
+  .speed-val { font-size: 13px; font-weight: 500; min-width: 32px; text-align: right; color: var(--color-text-primary); }
+
+  .dpad { display: grid; grid-template-columns: repeat(3, 72px); grid-template-rows: repeat(3, 72px); gap: 8px; margin: 0 auto 28px; width: fit-content; }
+  .dpad-btn { width: 72px; height: 72px; border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.1s, transform 0.1s; user-select: none; -webkit-user-select: none; }
+  .dpad-btn:active, .dpad-btn.pressed { background: #E1F5EE; border-color: #1D9E75; transform: scale(0.94); }
+  .dpad-btn.stop-btn { background: var(--color-background-danger); border-color: var(--color-border-danger); color: var(--color-text-danger); font-size: 13px; font-weight: 500; }
+  .dpad-btn.stop-btn:active { background: #F7C1C1; }
+  .dpad-empty { visibility: hidden; }
+
+  .cmd-log { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 10px 14px; font-size: 12px; font-family: var(--font-mono); color: var(--color-text-secondary); height: 64px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+  .cmd-log-label { font-size: 11px; color: var(--color-text-tertiary); margin-bottom: 6px; font-family: var(--font-sans); }
+  .log-entry { display: flex; gap: 8px; }
+  .log-time { color: var(--color-text-tertiary); }
+  .log-cmd { color: #0F6E56; font-weight: 500; }
+
+  .voice-section { }
+  .voice-hint { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 20px; line-height: 1.6; }
+  .voice-btn-wrap { display: flex; justify-content: center; margin-bottom: 28px; }
+  .voice-btn { width: 96px; height: 96px; border-radius: 50%; border: 2px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-secondary); font-size: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .voice-btn.listening { border-color: #E24B4A; background: #FCEBEB; color: #A32D2D; animation: pulse 1.2s infinite; }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(226,75,74,0.2); } 50% { box-shadow: 0 0 0 10px rgba(226,75,74,0); } }
+  .voice-commands { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+  .vc-row { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; }
+  .vc-word { font-size: 13px; color: var(--color-text-primary); }
+  .vc-char { font-size: 12px; font-family: var(--font-mono); background: var(--color-background-primary); border: 0.5px solid var(--color-border-secondary); padding: 2px 8px; border-radius: var(--border-radius-md); color: var(--color-text-secondary); }
+  .status-bar { margin-top: 8px; font-size: 12px; color: var(--color-text-secondary); text-align: center; min-height: 18px; }
+  .status-bar.active { color: #0F6E56; }
+
+  .settings-section { }
+  .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .setting-label { font-size: 14px; color: var(--color-text-primary); }
+  .setting-sub { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
+  .toggle { width: 40px; height: 22px; border-radius: 11px; background: var(--color-background-secondary); border: 0.5px solid var(--color-border-secondary); cursor: pointer; position: relative; transition: background 0.2s; flex-shrink: 0; }
+  .toggle.on { background: #1D9E75; border-color: #0F6E56; }
+  .toggle::after { content: ''; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: white; top: 2px; left: 2px; transition: left 0.2s; }
+  .toggle.on::after { left: 20px; }
+  .protocol-note { margin-top: 20px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary); padding: 14px 16px; font-size: 13px; color: var(--color-text-secondary); line-height: 1.7; }
+  .protocol-note strong { color: var(--color-text-primary); font-weight: 500; }
+</style>
+
+<div class="app">
+  <div class="header">
+    <div class="header-left">
+      <div class="logo-dot"></div>
+      <span class="app-title">Arduino Robot Controller</span>
+    </div>
+    <div class="bt-status">
+      <div class="bt-dot" id="btDot"></div>
+      <span id="btStatusText">Disconnected</span>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchTab('joystick')"><i class="ti ti-steering-wheel" aria-hidden="true"></i> Joystick</div>
+    <div class="tab" onclick="switchTab('voice')"><i class="ti ti-microphone" aria-hidden="true"></i> Voice</div>
+    <div class="tab" onclick="switchTab('settings')"><i class="ti ti-settings" aria-hidden="true"></i> Settings</div>
+  </div>
+
+  <div class="tab-content active" id="tab-joystick">
+    <div class="bt-connect-bar">
+      <i class="ti ti-bluetooth" aria-hidden="true" style="font-size:18px; color: var(--color-text-secondary);"></i>
+      <select id="deviceSelect">
+        <option value="">Select Bluetooth device…</option>
+        <option value="HC-05">HC-05</option>
+        <option value="HC-06">HC-06</option>
+        <option value="JDY-30">JDY-30</option>
+      </select>
+      <button class="connect-btn" id="connectBtn" onclick="toggleConnect()">Connect</button>
+    </div>
+
+    <div class="speed-row">
+      <label>Speed</label>
+      <input type="range" min="1" max="3" value="2" step="1" id="speedSlider" oninput="updateSpeed(this.value)">
+      <span class="speed-val" id="speedVal">Medium</span>
+    </div>
+
+    <div class="dpad">
+      <div class="dpad-empty"></div>
+      <div class="dpad-btn" id="btn-F" onpointerdown="pressCmd('F')" onpointerup="releaseCmd('F')" onpointerleave="releaseCmd('F')"><i class="ti ti-arrow-up" aria-label="Forward"></i></div>
+      <div class="dpad-empty"></div>
+      <div class="dpad-btn" id="btn-L" onpointerdown="pressCmd('L')" onpointerup="releaseCmd('L')" onpointerleave="releaseCmd('L')"><i class="ti ti-arrow-left" aria-label="Left"></i></div>
+      <div class="dpad-btn stop-btn" id="btn-S" onpointerdown="pressCmd('S')" onpointerup="releaseCmd('S')">STOP</div>
+      <div class="dpad-btn" id="btn-R" onpointerdown="pressCmd('R')" onpointerup="releaseCmd('R')" onpointerleave="releaseCmd('R')"><i class="ti ti-arrow-right" aria-label="Right"></i></div>
+      <div class="dpad-empty"></div>
+      <div class="dpad-btn" id="btn-B" onpointerdown="pressCmd('B')" onpointerup="releaseCmd('B')" onpointerleave="releaseCmd('B')"><i class="ti ti-arrow-down" aria-label="Backward"></i></div>
+      <div class="dpad-empty"></div>
+    </div>
+
+    <div class="cmd-log-label">Command log</div>
+    <div class="cmd-log" id="cmdLog"><div style="color:var(--color-text-tertiary); font-family:var(--font-sans); font-size:12px;">Waiting for commands…</div></div>
+  </div>
+
+  <div class="tab-content" id="tab-voice">
+    <p class="voice-hint">Tap the microphone and speak a command. The app will match your words and send the corresponding character to the robot via Bluetooth.</p>
+
+    <div class="voice-btn-wrap">
+      <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()" aria-label="Start voice recognition">
+        <i class="ti ti-microphone"></i>
+      </button>
+    </div>
+
+    <div class="voice-commands">
+      <div class="vc-row"><span class="vc-word">"move forward"</span><span class="vc-char">^</span></div>
+      <div class="vc-row"><span class="vc-word">"move back"</span><span class="vc-char">-</span></div>
+      <div class="vc-row"><span class="vc-word">"turn left"</span><span class="vc-char">&lt;</span></div>
+      <div class="vc-row"><span class="vc-word">"turn right"</span><span class="vc-char">&gt;</span></div>
+      <div class="vc-row"><span class="vc-word">"stop"</span><span class="vc-char">*</span></div>
+      <div class="vc-row"><span class="vc-word">"go forward"</span><span class="vc-char">^</span></div>
+    </div>
+
+    <div class="status-bar" id="voiceStatus">Tap microphone to start</div>
+    <div class="cmd-log-label" style="margin-top:12px;">Command log</div>
+    <div class="cmd-log" id="voiceLog"><div style="color:var(--color-text-tertiary); font-family:var(--font-sans); font-size:12px;">Waiting…</div></div>
+  </div>
+
+  <div class="tab-content" id="tab-settings">
+    <div class="settings-section">
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Auto-stop on release</div>
+          <div class="setting-sub">Sends 'S' when you lift finger off button</div>
+        </div>
+        <div class="toggle on" id="toggleAutoStop" onclick="toggleSetting('autoStop')"></div>
+      </div>
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Haptic feedback</div>
+          <div class="setting-sub">Vibrate on button press (mobile)</div>
+        </div>
+        <div class="toggle on" id="toggleHaptic" onclick="toggleSetting('haptic')"></div>
+      </div>
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Command echo</div>
+          <div class="setting-sub">Log sent characters in command log</div>
+        </div>
+        <div class="toggle on" id="toggleEcho" onclick="toggleSetting('echo')"></div>
+      </div>
+    </div>
+
+    <div class="protocol-note">
+      <strong>Bluetooth protocol</strong><br>
+      Joystick mode sends single ASCII characters: <code>F</code> forward, <code>B</code> backward, <code>L</code> left, <code>R</code> right, <code>S</code> stop.<br><br>
+      Voice mode sends: <code>^</code> forward, <code>-</code> backward, <code>&lt;</code> left, <code>&gt;</code> right, <code>*</code> stop.<br><br>
+      Baud rate: <strong>9600</strong>. Pair your HC-05/HC-06 in your phone's Bluetooth settings before connecting here.
+    </div>
+  </div>
+</div>
+
+<script>
+  let connected = false;
+  let listening = false;
+  let recognition = null;
+  let autoStop = true;
+  let haptic = true;
+  let echo = true;
+  let activeCmd = null;
+  let stopTimer = null;
+
+  const speedLabels = ['Slow', 'Medium', 'Fast'];
+  const cmdNames = { F:'Forward', B:'Backward', L:'Left', R:'Right', S:'Stop' };
+  const voiceMap = {
+    'move forward': '^', 'go forward': '^', 'forward': '^',
+    'move back': '-', 'go back': '-', 'backward': '-', 'reverse': '-',
+    'turn left': '<', 'go left': '<', 'left': '<',
+    'turn right': '>', 'go right': '>', 'right': '>',
+    'stop': '*', 'halt': '*', 'brake': '*'
+  };
+
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach((t,i) => {
+      const names = ['joystick','voice','settings'];
+      t.classList.toggle('active', names[i] === name);
+    });
+    document.querySelectorAll('.tab-content').forEach(c => {
+      c.classList.toggle('active', c.id === 'tab-' + name);
+    });
+  }
+
+  function toggleConnect() {
+    connected = !connected;
+    const dot = document.getElementById('btDot');
+    const txt = document.getElementById('btStatusText');
+    const btn = document.getElementById('connectBtn');
+    dot.classList.toggle('connected', connected);
+    txt.textContent = connected ? 'Connected' : 'Disconnected';
+    btn.textContent = connected ? 'Disconnect' : 'Connect';
+    btn.classList.toggle('connected', connected);
+    if (connected) logCmd('cmdLog', '---', 'Connected to ' + (document.getElementById('deviceSelect').value || 'device'));
+  }
+
+  function updateSpeed(v) {
+    document.getElementById('speedVal').textContent = speedLabels[v - 1];
+  }
+
+  function pressCmd(cmd) {
+    if (!connected) { logCmd('cmdLog', '!', 'Not connected'); return; }
+    if (activeCmd === cmd) return;
+    activeCmd = cmd;
+    document.getElementById('btn-' + cmd)?.classList.add('pressed');
+    if (haptic && navigator.vibrate) navigator.vibrate(20);
+    sendCommand(cmd, 'cmdLog');
+    if (cmd !== 'S') {
+      clearTimeout(stopTimer);
+    }
+  }
+
+  function releaseCmd(cmd) {
+    document.getElementById('btn-' + cmd)?.classList.remove('pressed');
+    if (activeCmd === cmd) activeCmd = null;
+    if (autoStop && cmd !== 'S' && connected) {
+      stopTimer = setTimeout(() => { sendCommand('S', 'cmdLog'); }, 50);
+    }
+  }
+
+  function sendCommand(cmd, logId) {
+    if (echo) logCmd(logId, cmd, cmdNames[cmd] || cmd);
+  }
+
+  function logCmd(logId, cmd, label) {
+    const log = document.getElementById(logId);
+    const now = new Date();
+    const ts = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0') + ':' + now.getSeconds().toString().padStart(2,'0');
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    entry.innerHTML = '<span class="log-time">' + ts + '</span><span class="log-cmd">' + cmd + '</span><span>' + label + '</span>';
+    if (log.children.length === 1 && log.firstChild.tagName !== 'DIV') log.innerHTML = '';
+    log.appendChild(entry);
+    log.scrollTop = log.scrollHeight;
+    if (log.children.length > 12) log.removeChild(log.firstChild);
+  }
+
+  function toggleVoice() {
+    if (!connected) { document.getElementById('voiceStatus').textContent = 'Connect Bluetooth first'; return; }
+    if (!listening) {
+      startListening();
+    } else {
+      stopListening();
+    }
+  }
+
+  function startListening() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      document.getElementById('voiceStatus').textContent = 'Speech API not available in this browser';
+      return;
+    }
+    recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+    recognition.onresult = (e) => {
+      const transcript = e.results[e.results.length - 1][0].transcript.trim().toLowerCase();
+      document.getElementById('voiceStatus').textContent = 'Heard: "' + transcript + '"';
+      document.getElementById('voiceStatus').className = 'status-bar';
+      for (const [phrase, char] of Object.entries(voiceMap)) {
+        if (transcript.includes(phrase)) {
+          logCmd('voiceLog', char, '"' + transcript + '"');
+          document.getElementById('voiceStatus').className = 'status-bar active';
+          if (haptic && navigator.vibrate) navigator.vibrate(30);
+          break;
+        }
+      }
+    };
+    recognition.onerror = () => { stopListening(); };
+    recognition.onend = () => { if (listening) recognition.start(); };
+    recognition.start();
+    listening = true;
+    document.getElementById('voiceBtn').classList.add('listening');
+    document.getElementById('voiceStatus').textContent = 'Listening…';
+  }
+
+  function stopListening() {
+    listening = false;
+    if (recognition) recognition.stop();
+    document.getElementById('voiceBtn').classList.remove('listening');
+    document.getElementById('voiceStatus').textContent = 'Tap microphone to start';
+  }
+
+  function toggleSetting(key) {
+    if (key === 'autoStop') { autoStop = !autoStop; document.getElementById('toggleAutoStop').classList.toggle('on', autoStop); }
+    if (key === 'haptic') { haptic = !haptic; document.getElementById('toggleHaptic').classList.toggle('on', haptic); }
+    if (key === 'echo') { echo = !echo; document.getElementById('toggleEcho').classList.toggle('on', echo); }
+  }
+</script>
